@@ -43,7 +43,8 @@ RUN pip --no-cache-dir install \
         numpy \
         scipy \
         sklearn \
-        pandas \
+        pandas \ 
+        mock \
         && \
     python -m ipykernel.kernelspec
 
@@ -85,21 +86,26 @@ RUN git clone --branch=r1.4 --depth=1 https://github.com/tensorflow/tensorflow.g
 ENV CI_BUILD_PYTHON python
 ENV LD_LIBRARY_PATH /usr/local/cuda/extras/CUPTI/lib64:$LD_LIBRARY_PATH
 ENV TF_NEED_CUDA 1
-ENV TF_CUDA_COMPUTE_CAPABILITIES=3.0,3.5,5.2,6.0,6.1
+ENV TF_CUDA_COMPUTE_CAPABILITIES=3.0,3.5,5.2,5.3,6.0,6.1
 ENV TF_CUDA_VERSION=9.0
 ENV TF_CUDNN_VERSION=7
+ENV TF_ENABLE_XLA=1
+ENV TF_NEED_JEMALLOC=1
+ENV TF_NEED_HDFS=1
 
 RUN ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1 && \
     LD_LIBRARY_PATH=/usr/local/cuda/lib64/stubs:${LD_LIBRARY_PATH} \
     tensorflow/tools/ci_build/builds/configured GPU \
     bazel build -c opt --config=cuda \
+        -c opt --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx \
 	--cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-        tensorflow/tools/pip_package:build_pip_package && \
-    rm /usr/local/cuda/lib64/stubs/libcuda.so.1 && \
-    bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/pip && \
-    pip --no-cache-dir install --upgrade /tmp/pip/tensorflow-*.whl && \
-    rm -rf /tmp/pip && \
-    rm -rf /root/.cache
+#        tensorflow/tools/pip_package:build_pip_package && \
+        tensorflow/... && \
+    rm /usr/local/cuda/lib64/stubs/libcuda.so.1
+    #bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/pip && \
+    #pip --no-cache-dir install --upgrade /tmp/pip/tensorflow-*.whl && \
+    #rm -rf /tmp/pip && \
+    #rm -rf /root/.cache
 # Clean up pip wheel and Bazel cache when done.
 
 WORKDIR /root
