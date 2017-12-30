@@ -1,0 +1,2 @@
+Sending build context to Docker daemon  453.1kB
+Error response from daemon: Dockerfile parse error line 102: unknown instruction: RM
