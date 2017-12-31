@@ -2,6 +2,24 @@ FROM nvidia/cuda:9.0-base-ubuntu16.04
 
 LABEL maintainer="Craig Citro <craigcitro@google.com>"
 
+RUN \
+ apt-get update \ 
+ && apt-get install -y wget bzip2
+
+# Install Anaconda with Python3
+RUN wget -q https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh -O /tmp/miniconda.sh  && \
+    echo 'c1c15d3baba15bf50293ae963abef853 */tmp/miniconda.sh' | md5sum -c - && \
+    bash /tmp/miniconda.sh -f -b -p /opt/conda && \
+    /opt/conda/bin/conda install --yes python=3.6 pip && \
+    /opt/conda/bin/pip install --upgrade pip && \
+    rm /tmp/miniconda.sh
+
+ENV \
+  PATH=/opt/conda/bin:$PATH
+
+RUN \
+  pip install --upgrade pip
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         cuda-command-line-tools-9-0 \
@@ -20,9 +38,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libpng12-dev \
         libzmq3-dev \
         pkg-config \
-        python-dev \
+        python3-dev \
+        python-numpy \
+        python3-numpy \
+        python-six \
+        python3-six \
+        python-wheel \
+        python3-wheel \
+        python-pip \
+        python3-pip \
         rsync \
         software-properties-common \
+        swig \
         unzip \
         zip \
         zlib1g-dev \
@@ -32,9 +59,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     find /usr/local/cuda-9.0/lib64/ -type f -name 'lib*_static.a' -not -name 'libcudart_static.a' -delete && \
     rm /usr/lib/x86_64-linux-gnu/libcudnn_static_v7.a
 
-RUN curl -fSsL -O https://bootstrap.pypa.io/get-pip.py && \
-    python get-pip.py && \
-    rm get-pip.py
+#RUN curl -fSsL -O https://bootstrap.pypa.io/get-pip.py && \
+#    python get-pip.py && \
+#    rm get-pip.py
 
 RUN pip --no-cache-dir install \
         ipykernel \
@@ -45,6 +72,23 @@ RUN pip --no-cache-dir install \
         sklearn \
         pandas \
         mock 
+
+###################
+# Setup OpenJDK 1.8
+###################
+RUN \
+  apt-get update \
+  && apt-get install -y software-properties-common \
+  && add-apt-repository -y ppa:openjdk-r/ppa \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends openjdk-8-jdk openjdk-8-jre-headless \
+  && apt-get install -y apt-transport-https \
+  && apt-get install -y wget \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+ENV \
+  JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
 
 # Set up Bazel.
 
@@ -75,10 +119,8 @@ RUN \
   git clone --branch=r1.4 --depth=1 https://github.com/tensorflow/tensorflow.git
 
 # Configure the build for our CUDA configuration.
-ENV CI_BUILD_PYTHON=python
-ENV LD_LIBRARY_PATH=/usr/local/cuda/extras/CUPTI/lib64:$LD_LIBRARY_PATH
-ENV TF_NEED_CUDA=1
-ENV TF_CUDA_COMPUTE_CAPABILITIES=3.0,3.5,5.2,5.3,6.0,6.1
+ENV LD_LIBRARY_PATH /usr/local/cuda/extras/CUPTI/lib64:$LD_LIBRARY_PATH
+ENV TF_NEED_CUDA 1
 ENV TF_CUDA_VERSION=9.0
 ENV TF_CUDNN_VERSION=7
 ENV TF_NEED_JEMALLOC=1
@@ -86,16 +128,53 @@ ENV TF_ENABLE_XLA=1
 ENV TF_NEED_HDFS=1
 ENV TF_NEED_S3=1
 ENV TF_NEED_GCP=1
+ENV PYTHON_BIN_PATH=/opt/conda/bin/python3.6
+ENV PYTHON_LIB_PATH=/opt/conda/lib/python3.6
+ENV CI_BUILD_PYTHON=$PYTHON_BIN_PATH
+ENV TF_CUDA_COMPUTE_CAPABILITIES=3.0,3.5,3.7,5.2,6.0,6.1,6.2,7.0
+####################
+####    AWS     ####
+##  P2 Instances  ##
+# Tesla K-80 (3.7) #
+#                  #
+##  G2 Instances  ##
+# GRID K520 (3.5)  #
+#                  #
+##  G3 Instances  ##
+# Tesla M60 (5.2)  #
+#                  #
+##  P3 Instances  ##
+# Tesla V100 (7.0) #
+#                  #          
+#### Google GCP ####   
+# Tesla K-80 (3.7) #
+#                  #
+# Tesla P-100 (6.0)#
+####################
 
 WORKDIR /root/tensorflow
 
-RUN ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1 && \
-    LD_LIBRARY_PATH=/usr/local/cuda/lib64/stubs:${LD_LIBRARY_PATH} \
-    tensorflow/tools/ci_build/builds/configured GPU \
-    bazel build \
-      -c opt --config=cuda --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx --copt=-mavx2 --copt=-mfma --copt=-O3 \
-      --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-      tensorflow/... && \
-    rm /usr/local/cuda/lib64/stubs/libcuda.so.1 
+ENV \
+  CPU_COUNT=8 \
+  GPU_COUNT=1 
+
+RUN \
+  ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1 && \
+  LD_LIBRARY_PATH=/usr/local/cuda/lib64/stubs:${LD_LIBRARY_PATH} \
+  tensorflow/tools/ci_build/builds/configured GPU \
+  bazel build -c opt --config=mkl --config=cuda \
+    --jobs=${CPU_COUNT} \
+    --local_test_jobs=${GPU_COUNT} \
+    --verbose_failures \
+    --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx --copt=-mavx2 --copt=-mfma --copt=-O3 \
+    --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
+    --run_under=//tensorflow/tools/ci_build/gpu_build:parallel_gpu_execute -- \
+    tensorflow/... && \
+  rm /usr/local/cuda/lib64/stubs/libcuda.so.1
+
+RUN \
+  bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/pip \
+  && pip --no-cache-dir install --ignore-installed --upgrade /tmp/pip/tensorflow-*.whl \
+  && rm -rf /tmp/pip
 
 WORKDIR /root
