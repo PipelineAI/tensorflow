@@ -1,6 +1,20 @@
 FROM nvidia/cuda:9.0-base-ubuntu16.04
 
-LABEL maintainer="Craig Citro <craigcitro@google.com>"
+ENV \
+  OS_LOCALE="en_US.UTF-8" \
+  LANG=${OS_LOCALE} \
+  LANGUAGE=en_US:en \
+  LC_ALL=${OS_LOCALE}
+
+RUN \
+ apt-get update \
+ && apt-get -y install curl locales \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN \
+  locale-gen ${OS_LOCALE} \
+  && localedef -i en_US -f UTF-8 en_us.UTF-8
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
@@ -32,9 +46,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     find /usr/local/cuda-9.0/lib64/ -type f -name 'lib*_static.a' -not -name 'libcudart_static.a' -delete && \
     rm /usr/lib/x86_64-linux-gnu/libcudnn_static_v7.a
 
-RUN curl -fSsL -O https://bootstrap.pypa.io/get-pip.py && \
-    python get-pip.py && \
-    rm get-pip.py
+#RUN curl -fSsL -O https://bootstrap.pypa.io/get-pip.py && \
+#    python get-pip.py && \
+#    rm get-pip.py
 
 RUN pip --no-cache-dir install \
         ipykernel \
