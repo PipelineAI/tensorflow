@@ -16,6 +16,24 @@ RUN \
   locale-gen ${OS_LOCALE} \
   && localedef -i en_US -f UTF-8 en_us.UTF-8
 
+RUN \
+ apt-get update \ 
+ && apt-get install -y wget bzip2
+
+# Install Anaconda with Python3
+RUN wget -q https://repo.continuum.io/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh -O /tmp/miniconda.sh  && \
+    echo '7fe70b214bee1143e3e3f0467b71453c */tmp/miniconda.sh' | md5sum -c - && \
+    bash /tmp/miniconda.sh -f -b -p /opt/conda && \
+    /opt/conda/bin/conda install --yes python=3.6 sqlalchemy tornado jinja2 traitlets requests pip && \
+    /opt/conda/bin/pip install --upgrade pip && \
+    rm /tmp/miniconda.sh
+
+ENV \
+  PATH=/opt/conda/bin:$PATH
+
+RUN \
+  pip install --upgrade pip
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         cuda-command-line-tools-9-0 \
@@ -35,8 +53,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libzmq3-dev \
         pkg-config \
         python-dev \
+        python3-dev \
+        python-numpy \
+        python3-numpy \
+        python-six \
+        python3-six \
+        python-wheel \
+        python3-wheel \
+        python-pip \
+        python3-pip \
         rsync \
         software-properties-common \
+        swig \
         unzip \
         zip \
         zlib1g-dev \
@@ -60,7 +88,27 @@ RUN pip --no-cache-dir install \
         pandas \
         mock 
 
+###################
+# Setup OpenJDK 1.8
+###################
+# TODO:  Copy from TF Serving?
+RUN \
+  apt-get update \
+  && apt-get install -y software-properties-common \
+  && add-apt-repository -y ppa:openjdk-r/ppa \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends openjdk-8-jdk openjdk-8-jre-headless \
+  && apt-get install -y apt-transport-https \
+  && apt-get install -y wget \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+ENV \
+  JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
+
 # Set up Bazel.
+
+# TODO:  Copy from TF Serving?
 
 # Running bazel inside a `docker build` command causes trouble, cf:
 #   https://github.com/bazelbuild/bazel/issues/134
@@ -85,16 +133,17 @@ RUN mkdir /bazel && \
 # Download and build TensorFlow.
 WORKDIR /root
 
+# TODO:  Overcome Missing Android SDK and build r1.5 or master
 RUN \
   git clone --branch=r1.4 --depth=1 https://github.com/tensorflow/tensorflow.git
-#  cd tensorflow && \
-#  git reset --hard 3629fc4
+
+# TODO: Copied from workshop?
+#RUN cp -P /usr/include/cudnn.h /usr/local/cuda/include
+#RUN cp -P /usr/lib/x86_64-linux-gnu/libcudnn* /usr/local/cuda/lib64
 
 # Configure the build for our CUDA configuration.
-ENV CI_BUILD_PYTHON python
 ENV LD_LIBRARY_PATH /usr/local/cuda/extras/CUPTI/lib64:$LD_LIBRARY_PATH
-ENV TF_NEED_CUDA 1
-ENV TF_CUDA_COMPUTE_CAPABILITIES=3.0,3.5,5.2,5.3,6.0,6.1
+ENV TF_NEED_CUDA=1
 ENV TF_CUDA_VERSION=9.0
 ENV TF_CUDNN_VERSION=7
 ENV TF_NEED_JEMALLOC=1
@@ -102,17 +151,68 @@ ENV TF_ENABLE_XLA=1
 ENV TF_NEED_HDFS=1
 ENV TF_NEED_S3=1
 ENV TF_NEED_GCP=1
+ENV PYTHON_BIN_PATH=/opt/conda/bin/python3.6
+ENV PYTHON_LIB_PATH=/opt/conda/lib/python3.6
+ENV CI_BUILD_PYTHON=$PYTHON_BIN_PATH
+ENV TF_CUDA_COMPUTE_CAPABILITIES=3.0,3.5,3.7,5.2,6.0,6.1,6.2,7.0
+####################
+####    AWS     ####
+##  P2 Instances  ##
+# Tesla K-80 (3.7) #
+#                  #
+##  G2 Instances  ##
+# GRID K520 (3.5)  #
+#                  #
+##  G3 Instances  ##
+# Tesla M60 (5.2)  #
+#                  #
+##  P3 Instances  ##
+# Tesla V100 (7.0) #
+#                  #          
+#### Google GCP ####   
+# Tesla K-80 (3.7) #
+#                  #
+# Tesla P-100 (6.0)#
+####################
 
 WORKDIR /root/tensorflow
 
-RUN ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1 && \
-    LD_LIBRARY_PATH=/usr/local/cuda/lib64/stubs:${LD_LIBRARY_PATH} \
-    tensorflow/tools/ci_build/builds/configured GPU \
-    bazel build \
-      -c opt --config=cuda --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx --copt=-mavx2 --copt=-mfma --copt=-O3 \
-      --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-      tensorflow/... && \
-    rm /usr/local/cuda/lib64/stubs/libcuda.so.1 && \
-    rm /tmp
+ENV \
+  CPU_COUNT=8 \
+  GPU_COUNT=1 
+
+# TODO: Copied from TF Serving
+# Fix paths so that CUDNN can be found
+# See https://github.com/tensorflow/tensorflow/issues/8264
+#RUN ls -lah /usr/local/cuda/lib64/*
+#RUN mkdir /usr/lib/x86_64-linux-gnu/include/ && \
+#  ln -s /usr/lib/x86_64-linux-gnu/include/cudnn.h /usr/lib/x86_64-linux-gnu/include/cudnn.h && \
+#  ln -s /usr/include/cudnn.h /usr/local/cuda/include/cudnn.h && \
+#  ln -s /usr/lib/x86_64-linux-gnu/libcudnn.so /usr/local/cuda/lib64/libcudnn.so && \
+#  ln -s /usr/lib/x86_64-linux-gnu/libcudnn.so.7 /usr/local/cuda/lib64/libcudnn.so.7
+
+RUN \
+  ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1 && \
+# TODO: Copied from workshop
+#  && sed -i.bak '/nccl/d' tensorflow/tensorflow/contrib/BUILD \
+  LD_LIBRARY_PATH=/usr/local/cuda/lib64/stubs:${LD_LIBRARY_PATH} \
+  tensorflow/tools/ci_build/builds/configured GPU \
+  bazel build -c opt --config=mkl --config=cuda \
+    --jobs=${CPU_COUNT} \
+    --local_test_jobs=${GPU_COUNT} \
+    --verbose_failures \
+    --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx --copt=-mavx2 --copt=-mfma --copt=-O3 \
+    --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
+    --run_under=//tensorflow/tools/ci_build/gpu_build:parallel_gpu_execute -- \
+# TODO: Copied from TF Serving and Workshop
+#    --crosstool_top=@local_config_cuda//crosstool:toolchain \
+    tensorflow/... && \
+  rm /usr/local/cuda/lib64/stubs/libcuda.so.1
+
+RUN \
+  bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/pip \
+  && pip --no-cache-dir install --ignore-installed --upgrade /tmp/pip/tensorflow-*.whl 
+# TODO:  Keep wheel?
+#  && rm -rf /tmp/pip
 
 WORKDIR /root
