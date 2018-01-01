@@ -142,6 +142,7 @@ RUN \
 #RUN cp -P /usr/lib/x86_64-linux-gnu/libcudnn* /usr/local/cuda/lib64
 
 # Configure the build for our CUDA configuration.
+ENV CC_OPT_FLAGS="-march=native"
 ENV LD_LIBRARY_PATH /usr/local/cuda/extras/CUPTI/lib64:$LD_LIBRARY_PATH
 ENV TF_NEED_CUDA=1
 ENV TF_CUDA_VERSION=9.0
@@ -203,9 +204,9 @@ RUN \
     --verbose_failures \
     --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx --copt=-mavx2 --copt=-mfma --copt=-O3 \
     --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-    --run_under=//tensorflow/tools/ci_build/gpu_build:parallel_gpu_execute -- \
 # TODO: Copied from TF Serving and Workshop
-#    --crosstool_top=@local_config_cuda//crosstool:toolchain \
+    --crosstool_top=@local_config_cuda//crosstool:toolchain \
+    --run_under=//tensorflow/tools/ci_build/gpu_build:parallel_gpu_execute -- \
     tensorflow/... && \
   rm /usr/local/cuda/lib64/stubs/libcuda.so.1
 
