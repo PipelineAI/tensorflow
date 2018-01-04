@@ -134,5 +134,14 @@ RUN \
 RUN \
   pip --no-cache-dir install --upgrade /tmp/pip/tensorflow-*.whl 
 
+ENV \
+  TENSORFLOW_HOME=/root/tensorflow
+
+ENV \
+  PATH=$TENSORFLOW_HOME/bazel-bin/tensorflow/tools/graph_transforms:$TENSORFLOW_HOME/bazel-bin/tensorflow/python/tools:$TENSORFLOW_HOME/bazel-bin/tensorflow/tools/benchmark/:$TENSORFLOW_HOME/bazel-bin/tensorflow/compiler/aot:$TENSORFLOW_HOME/bazel-bin/tensorflow/compiler/tests:$TENSORFLOW_HOME/bazel-bin/tensorflow/examples/tutorials/word2vec:$TENSORFLOW_HOME/bazel-bin/tensorflow/examples/tutorials/mnist
+
+#ENV \
+#  PATH=/root/apache-jmeter-3.1/bin/:/root/scripts:$PATH
+
 WORKDIR /root
 
