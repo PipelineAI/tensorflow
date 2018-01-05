@@ -2,13 +2,13 @@ FROM nvidia/cuda:9.0-base-ubuntu16.04
 
 RUN \
  apt-get update \
- && apt-get install -y wget bzip2
+ && apt-get install -y vim wget bzip2
 
 # Install Anaconda with Python3
 RUN wget -q https://repo.continuum.io/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh -O /tmp/miniconda.sh  && \
     echo '7fe70b214bee1143e3e3f0467b71453c */tmp/miniconda.sh' | md5sum -c - && \
     bash /tmp/miniconda.sh -f -b -p /opt/conda && \
-    /opt/conda/bin/conda install --yes python=3.6 sqlalchemy tornado jinja2 traitlets requests pip && \
+    /opt/conda/bin/conda install --yes python=3.6 pip && \
     /opt/conda/bin/pip install --upgrade pip && \
     rm /tmp/miniconda.sh
 
@@ -83,7 +83,7 @@ RUN echo "startup --batch" >>/etc/bazel.bazelrc
 RUN echo "build --spawn_strategy=standalone --genrule_strategy=standalone" \
     >>/etc/bazel.bazelrc
 # Install the most recent bazel release.
-ENV BAZEL_VERSION 0.5.4
+ENV BAZEL_VERSION 0.8.0
 WORKDIR /root
 RUN mkdir /bazel && \
     cd /bazel && \
@@ -98,7 +98,8 @@ RUN mkdir /bazel && \
 WORKDIR /root
 
 RUN \
-  git clone --branch=r1.4 --depth=1 https://github.com/tensorflow/tensorflow.git
+  git clone --branch=r1.5 --depth=1 https://github.com/tensorflow/tensorflow.git
+#  git clone --branch=r1.4 --depth=1 https://github.com/tensorflow/tensorflow.git
 #  cd tensorflow && \
 #  git reset --hard 3629fc4
 
@@ -123,10 +124,17 @@ RUN ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/lib
     LD_LIBRARY_PATH=/usr/local/cuda/lib64/stubs:${LD_LIBRARY_PATH} \
     tensorflow/tools/ci_build/builds/configured GPU \
     bazel build \
+      --keep_going \
+      --test_summary=detailed \
+      --test_output=errors \
       -c opt --config=cuda --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx --copt=-mavx2 --copt=-mfma --copt=-O3 \
       --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-      tensorflow/... && \
-    rm /usr/local/cuda/lib64/stubs/libcuda.so.1
+      -- \
+      tensorflow/tools/... \
+      tensorflow/compiler/... \
+      tensorflow/contrib/... -tensorflow/contrib/android/... -tensorflow/contrib/lite/... \
+      -tensorflow/examples/... \
+      && rm /usr/local/cuda/lib64/stubs/libcuda.so.1
 
 RUN \
   bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/pip 
@@ -138,11 +146,7 @@ ENV \
   TENSORFLOW_HOME=/root/tensorflow
 
 ENV \
-  PATH=$TENSORFLOW_HOME/bazel-bin/tensorflow/tools/graph_transforms:$TENSORFLOW_HOME/bazel-bin/tensorflow/python/tools:$TENSORFLOW_HOME/bazel-bin/tensorflow/tools/benchmark/:$TENSORFLOW_HOME/bazel-bin/tensorflow/compiler/aot:$TENSORFLOW_HOME/bazel-bin/tensorflow/compiler/tests:$TENSORFLOW_HOME/bazel-bin/tensorflow/examples/tutorials/word2vec:$TENSORFLOW_HOME/bazel-bin/tensorflow/examples/tutorials/mnist:$PATH
-
-RUN \
-  apt-get update \
-  && apt-get install -y vim
+  PATH=$TENSORFLOW_HOME/bazel-bin/tensorflow/tools/graph_transforms:$TENSORFLOW_HOME/bazel-bin/tensorflow/python/tools:$TENSORFLOW_HOME/bazel-bin/tensorflow/tools/benchmark/:$TENSORFLOW_HOME/bazel-bin/tensorflow/compiler/aot:$TENSORFLOW_HOME/bazel-bin/tensorflow/compiler/tests:$PATH
 
 WORKDIR /root
 
