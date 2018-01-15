@@ -16,6 +16,9 @@ ENV \
   PATH=/opt/conda/bin:$PATH
 
 RUN \
+  conda update -n base conda
+
+RUN \
   pip install --upgrade pip
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
