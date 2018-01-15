@@ -1,0 +1,381 @@
+WARNING: Error loading config file:/home/pipeline-training/.docker/config.json - stat /home/pipeline-training/.docker/config.json: permission denied
+Sending build context to Docker daemon  455.2kB
+Step 1/35 : FROM nvidia/cuda:9.1-base-ubuntu16.04
+ ---> e5bc65d04248
+Step 2/35 : RUN apt-get update  && apt-get install -y vim wget bzip2
+ ---> Using cache
+ ---> a93046423e83
+Step 3/35 : RUN wget -q https://repo.continuum.io/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh -O /tmp/miniconda.sh  &&     echo '7fe70b214bee1143e3e3f0467b71453c */tmp/miniconda.sh' | md5sum -c - &&     bash /tmp/miniconda.sh -f -b -p /opt/conda &&     /opt/conda/bin/conda install --yes python=3.6 pip &&     /opt/conda/bin/pip install --upgrade pip &&     rm /tmp/miniconda.sh
+ ---> Using cache
+ ---> 98b9b4985abf
+Step 4/35 : ENV PATH /opt/conda/bin:$PATH
+ ---> Using cache
+ ---> cefd55bc9ac2
+Step 5/35 : RUN conda update -n base conda
+ ---> Using cache
+ ---> 598e9ee03cc3
+Step 6/35 : RUN pip install --upgrade pip
+ ---> Using cache
+ ---> 0b7f070f23d4
+Step 7/35 : RUN apt-get update && apt-get install -y --no-install-recommends         build-essential         cuda-command-line-tools-9-1         cuda-cublas-dev-9-1         cuda-cudart-dev-9-1         cuda-cufft-dev-9-1         cuda-curand-dev-9-1         cuda-cusolver-dev-9-1         cuda-cusparse-dev-9-1         curl         git         libcudnn7=7.0.5.15-1+cuda9.1         libcudnn7-dev=7.0.5.15-1+cuda9.1         libcurl3-dev         libfreetype6-dev         libpng12-dev         libzmq3-dev         pkg-config         python-dev         python3-dev         python-numpy         python3-numpy         python-six         python3-six         python-wheel         python3-wheel         python-pip         python3-pip         rsync         software-properties-common         swig         unzip         zip         zlib1g-dev         wget         &&     rm -rf /var/lib/apt/lists/* &&     find /usr/local/cuda-9.1/lib64/ -type f -name 'lib*_static.a' -not -name 'libcudart_static.a' -delete &&     rm /usr/lib/x86_64-linux-gnu/libcudnn_static_v7.a
+ ---> Using cache
+ ---> 5393c76bd4eb
+Step 8/35 : RUN pip --no-cache-dir install         ipykernel         jupyter         matplotlib         numpy         scipy         sklearn         pandas         mock
+ ---> Using cache
+ ---> 0ee1e335bf82
+Step 9/35 : RUN echo "startup --batch" >>/etc/bazel.bazelrc
+ ---> Using cache
+ ---> 88d5a442ee60
+Step 10/35 : RUN echo "build --spawn_strategy=standalone --genrule_strategy=standalone"     >>/etc/bazel.bazelrc
+ ---> Using cache
+ ---> 3c80fd640607
+Step 11/35 : ENV BAZEL_VERSION 0.8.0
+ ---> Using cache
+ ---> 37c34c07a68f
+Step 12/35 : WORKDIR /root
+ ---> Using cache
+ ---> d6390f1497d7
+Step 13/35 : RUN mkdir /bazel &&     cd /bazel &&     curl -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36" -fSsL -O https://github.com/bazelbuild/bazel/releases/download/$BAZEL_VERSION/bazel-$BAZEL_VERSION-installer-linux-x86_64.sh &&     curl -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36" -fSsL -o /bazel/LICENSE.txt https://raw.githubusercontent.com/bazelbuild/bazel/master/LICENSE &&     chmod +x bazel-*.sh &&     ./bazel-$BAZEL_VERSION-installer-linux-x86_64.sh &&     cd / &&     rm -f /bazel/bazel-$BAZEL_VERSION-installer-linux-x86_64.sh
+ ---> Using cache
+ ---> 52a623d7b8c8
+Step 14/35 : WORKDIR /root
+ ---> Using cache
+ ---> c6e0c443f71b
+Step 15/35 : RUN git clone --branch=r1.5 --depth=1 https://github.com/tensorflow/tensorflow.git
+ ---> Using cache
+ ---> 91c2a9c7b158
+Step 16/35 : ENV LD_LIBRARY_PATH /usr/local/cuda/extras/CUPTI/lib64:$LD_LIBRARY_PATH
+ ---> Using cache
+ ---> 4fa5d210dfaf
+Step 17/35 : ENV TF_NEED_CUDA 1
+ ---> Using cache
+ ---> 279d1dbc673b
+Step 18/35 : ENV TF_CUDA_COMPUTE_CAPABILITIES 3.0,3.5,3.7,5.2,5.3,6.0,6.1,7.0
+ ---> Using cache
+ ---> 32e3a1f6ea7a
+Step 19/35 : ENV TF_CUDA_VERSION 9.1
+ ---> Using cache
+ ---> aa19251f72c2
+Step 20/35 : ENV TF_CUDNN_VERSION 7
+ ---> Using cache
+ ---> 04f60f8f8c80
+Step 21/35 : ENV TF_NEED_JEMALLOC 1
+ ---> Using cache
+ ---> 954e459cd3b5
+Step 22/35 : ENV TF_ENABLE_XLA 1
+ ---> Using cache
+ ---> 67f473da57d2
+Step 23/35 : ENV TF_NEED_HDFS 1
+ ---> Using cache
+ ---> 807b3bf2216f
+Step 24/35 : ENV TF_NEED_S3 1
+ ---> Using cache
+ ---> 9d2e0fae7ab2
+Step 25/35 : ENV TF_NEED_GCP 1
+ ---> Using cache
+ ---> b485e8c4a68e
+Step 26/35 : ENV PYTHON_BIN_PATH /opt/conda/bin/python3.6
+ ---> Using cache
+ ---> e0ba5daaebfb
+Step 27/35 : ENV PYTHON_LIB_PATH /opt/conda/lib/python3.6
+ ---> Using cache
+ ---> a35be019f098
+Step 28/35 : ENV CI_BUILD_PYTHON $PYTHON_BIN_PATH
+ ---> Using cache
+ ---> 033fb4671e7e
+Step 29/35 : WORKDIR /root/tensorflow
+ ---> Using cache
+ ---> 3eee590e9b22
+Step 30/35 : RUN ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1 &&     LD_LIBRARY_PATH=/usr/local/cuda/lib64/stubs:${LD_LIBRARY_PATH}     tensorflow/tools/ci_build/builds/configured GPU     bazel build       --keep_going       --test_summary=detailed       --test_output=errors       -c opt --config=cuda --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx --copt=-mavx2 --copt=-mfma --copt=-O3       --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0"       --       tensorflow/tools/...       tensorflow/compiler/...       tensorflow/contrib/... -tensorflow/contrib/android/... -tensorflow/contrib/lite/...       -tensorflow/examples/...       && rm /usr/local/cuda/lib64/stubs/libcuda.so.1
+ ---> Running in e518515ee2e6
+~/tensorflow ~/tensorflow
+[91mExtracting Bazel installation...
+[0mYou have bazel 0.8.0 installed.
+Do you wish to build TensorFlow with GDR support? [y/N]: No GDR support will be enabled for TensorFlow.
+
+Do you wish to build TensorFlow with VERBS support? [y/N]: No VERBS support will be enabled for TensorFlow.
+
+Do you wish to build TensorFlow with OpenCL SYCL support? [y/N]: No OpenCL SYCL support will be enabled for TensorFlow.
+
+Please specify the location where CUDA 9.1 toolkit is installed. Refer to README.md for more details. [Default is /usr/local/cuda]: 
+
+Please specify the location where cuDNN 7 library is installed. Refer to README.md for more details. [Default is /usr/local/cuda]:
+
+Do you want to use clang as CUDA compiler? [y/N]: nvcc will be used as CUDA compiler.
+
+Please specify which gcc should be used by nvcc as the host compiler. [Default is /usr/bin/gcc]: 
+
+Do you wish to build TensorFlow with MPI support? [y/N]: No MPI support will be enabled for TensorFlow.
+
+Please specify optimization flags to use during compilation when bazel option "--config=opt" is specified [Default is -march=native]: 
+
+Add "--config=mkl" to your bazel command to build with MKL support.
+Please note that MKL on MacOS or windows is still not supported.
+If you would like to use a local MKL instead of downloading, please set the environment variable "TF_MKL_ROOT" every time before build.
+
+Would you like to interactively configure ./WORKSPACE for Android builds? [y/N]: Not configuring the WORKSPACE for Android builds.
+
+~/tensorflow
+TF_BUILD_INFO = {container_type: "gpu", command: "bazel build --keep_going --test_summary=detailed --test_output=errors -c opt --config=cuda --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx --copt=-mavx2 --copt=-mfma --copt=-O3 --cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0 -- tensorflow/tools/... tensorflow/compiler/... tensorflow/contrib/... -tensorflow/contrib/android/... -tensorflow/contrib/lite/... -tensorflow/examples/...", source_HEAD: "4b5bdc85e4ba2d2cc98398fc9843db1631e04e80", source_remote_origin: "https://github.com/tensorflow/tensorflow.git", OS: "Linux", kernel: "4.8.0-58-generic", architecture: "x86_64", processor: "Intel(R) Xeon(R) CPU @ 2.20GHz", processor_count: "8", memory_total: "53590496 kB", swap_total: "0 kB", Bazel_version: "Build label: 0.8.0", Java_version: "", Python_version: "3.6.4", gpp_version: "g++ (Ubuntu 5.4.0-6ubuntu1~16.04.5) 5.4.0 20160609", swig_version: "", NVIDIA_driver_version: "", CUDA_device_count: "0", CUDA_device_names: "", CUDA_toolkit_version: "V9.1.85"}
+[91mLoading: 
+[0m[91mLoading: 0 packages loaded
+[0m[91mLoading: 0 packages loaded
+[0m[91mLoading: 1 packages loaded
+    currently loading: tensorflow/tools/docker ... (13 packages)
+[0m[91mLoading: 12 packages loaded
+    currently loading: tensorflow/tools/pip_package ... (41 packages)
+[0m[91mLoading: 31 packages loaded
+    currently loading: tensorflow/tools/pip_package ... (93 packages)
+[0m[91mLoading: 55 packages loaded
+    currently loading: tensorflow/tools/pip_package ... (164 packages)
+[0m[91mLoading: 55 packages loaded
+    currently loading: tensorflow/tools/pip_package ... (164 packages)
+[0m[91mLoading: 55 packages loaded
+    currently loading: tensorflow/tools/pip_package ... (164 packages)
+[0m[91mLoading: 55 packages loaded
+    currently loading: tensorflow/tools/pip_package ... (164 packages)
+[0m[91mDEBUG: /root/.cache/bazel/_bazel_root/efb88f6336d9c4a18216fb94287b8d97/external/bazel_tools/tools/build_defs/pkg/pkg.bzl:197:9: @//tensorflow/tools/lib_package:libtensorflow_jni: you provided a non dictionary to the pkg_tar `files` attribute. This attribute was renamed to `srcs`. Consider renaming it in your BUILD file.
+[0m[91mDEBUG: /root/.cache/bazel/_bazel_root/efb88f6336d9c4a18216fb94287b8d97/external/bazel_tools/tools/build_defs/pkg/pkg.bzl:197:9: @//tensorflow/tools/lib_package:common_deps: you provided a non dictionary to the pkg_tar `files` attribute. This attribute was renamed to `srcs`. Consider renaming it in your BUILD file.
+[0m[91mDEBUG: /root/.cache/bazel/_bazel_root/efb88f6336d9c4a18216fb94287b8d97/external/bazel_tools/tools/build_defs/pkg/pkg.bzl:197:9: @//tensorflow/tools/lib_package:cheaders: you provided a non dictionary to the pkg_tar `files` attribute. This attribute was renamed to `srcs`. Consider renaming it in your BUILD file.
+[0m[91mDEBUG: /root/.cache/bazel/_bazel_root/efb88f6336d9c4a18216fb94287b8d97/external/bazel_tools/tools/build_defs/pkg/pkg.bzl:197:9: @//tensorflow/tools/lib_package:clib: you provided a non dictionary to the pkg_tar `files` attribute. This attribute was renamed to `srcs`. Consider renaming it in your BUILD file.
+[0m[91mDEBUG: /root/.cache/bazel/_bazel_root/efb88f6336d9c4a18216fb94287b8d97/external/bazel_tools/tools/build_defs/pkg/pkg.bzl:197:9: @//tensorflow/tools/lib_package:clicenses: you provided a non dictionary to the pkg_tar `files` attribute. This attribute was renamed to `srcs`. Consider renaming it in your BUILD file.
+[0m[91mWARNING: /root/tensorflow/tensorflow/contrib/session_bundle/BUILD:100:1: target '//tensorflow/contrib/session_bundle:constants' is deprecated: No longer supported. Switch to SavedModel immediately.
+WARNING: /root/tensorflow/tensorflow/contrib/session_bundle/BUILD:108:1: target '//tensorflow/contrib/session_bundle:exporter' is deprecated: No longer supported. Switch to SavedModel immediately.
+WARNING: /root/tensorflow/tensorflow/contrib/session_bundle/BUILD:152:1: target '//tensorflow/contrib/session_bundle:gc' is deprecated: No longer supported. Switch to SavedModel immediately.
+[0m[91mWARNING: /root/tensorflow/tensorflow/contrib/session_bundle/BUILD:194:1: target '//tensorflow/contrib/session_bundle:session_bundle' is deprecated: No longer supported. Switch to SavedModel immediately.
+WARNING: /root/tensorflow/tensorflow/contrib/session_bundle/BUILD:213:1: target '//tensorflow/contrib/session_bundle:session_bundle_lite' is deprecated: No longer supported. Switch to SavedModel immediately.
+[0m[91mWARNING: /root/tensorflow/tensorflow/contrib/session_bundle/BUILD:257:1: target '//tensorflow/contrib/session_bundle:session_bundle_py' is deprecated: No longer supported. Switch to SavedModel immediately.
+WARNING: /root/tensorflow/tensorflow/contrib/session_bundle/BUILD:325:1: target '//tensorflow/contrib/session_bundle:signature' is deprecated: No longer supported. Switch to SavedModel immediately.
+[0m[91mWARNING: /root/tensorflow/tensorflow/contrib/session_bundle/BUILD:306:1: target '//tensorflow/contrib/session_bundle:signature_lite' is deprecated: No longer supported. Switch to SavedModel immediately.
+[0m[91mWARNING: /root/tensorflow/tensorflow/contrib/session_bundle/BUILD:362:1: target '//tensorflow/contrib/session_bundle:test_util' is deprecated: No longer supported. Switch to SavedModel immediately.
+[0m[91mAnalyzing: 2284 targets (219 packages loaded)
+[0m[91mAnalyzing: 2284 targets (223 packages loaded)
+[0m[91mAnalyzing: 2284 targets (284 packages loaded)
+[0m[91mAnalyzing: 2284 targets (331 packages loaded)
+[0m[91mAnalyzing: 2284 targets (340 packages loaded)
+[0m[91mAnalyzing: 2284 targets (348 packages loaded)
+[0m[91mWARNING: /root/tensorflow/tensorflow/core/BUILD:1807:1: in includes attribute of cc_library rule //tensorflow/core:framework_headers_lib: '../../external/nsync/public' resolves to 'external/nsync/public' not below the relative path of its package 'tensorflow/core'. This will be an error in the future. Since this rule was created by the macro 'cc_header_only_library', the error might have been caused by the macro implementation in /root/tensorflow/tensorflow/tensorflow.bzl:1138:30
+[0m[91mAnalyzing: 2284 targets (351 packages loaded)
+[0m[91mAnalyzing: 2284 targets (352 packages loaded)
+[0m[91mWARNING: /root/tensorflow/tensorflow/contrib/learn/BUILD:15:1: in py_library rule //tensorflow/contrib/learn:learn: target '//tensorflow/contrib/learn:learn' depends on deprecated target '//tensorflow/contrib/session_bundle:exporter': No longer supported. Switch to SavedModel immediately.
+[0m[91mWARNING: /root/tensorflow/tensorflow/contrib/learn/BUILD:15:1: in py_library rule //tensorflow/contrib/learn:learn: target '//tensorflow/contrib/learn:learn' depends on deprecated target '//tensorflow/contrib/session_bundle:gc': No longer supported. Switch to SavedModel immediately.
+[0m[91mWARNING: /root/tensorflow/tensorflow/contrib/session_bundle/example/BUILD:26:1: in py_binary rule //tensorflow/contrib/session_bundle/example:export_half_plus_two: target '//tensorflow/contrib/session_bundle/example:export_half_plus_two' depends on deprecated target '//tensorflow/contrib/session_bundle:exporter': No longer supported. Switch to SavedModel immediately.
+[0m[91mINFO: Analysed 2284 targets (355 packages loaded).
+[0m[91mINFO: Found 2284 targets...
+[0m[91m[0 / 39] Creating source manifest for @protobuf_archive//:protoc [for host]
+[0m[91m[157 / 1,122] Compiling external/com_google_googletest/googletest/src/gtest.cc; 3s local ... (4 actions running)
+[0m[91m[285 / 1,122] Compiling external/com_google_googletest/googlemock/src/gmock-spec-builders.cc; 1s local ... (4 actions running)
+[0m[91m[354 / 1,122] Compiling external/protobuf_archive/src/google/protobuf/util/internal/default_value_objectwriter.cc [for host]; 1s local ... (4 actions running)
+[0m[91m[403 / 1,122] Compiling external/protobuf_archive/src/google/protobuf/generated_message_table_driven_lite.cc [for host]; 2s local ... (4 actions running)
+[0m[91m[462 / 1,172] Compiling external/protobuf_archive/src/google/protobuf/compiler/java/java_message_field_lite.cc [for host]; 2s local ... (4 actions running)
+[0m[91m[608 / 1,525] Compiling external/protobuf_archive/src/google/protobuf/wrappers.pb.cc [for host]; 2s local ... (4 actions running)
+[0m[91m[686 / 1,683] Compiling external/com_googlesource_code_re2/re2/re2.cc [for host]; 1s local ... (4 actions running)
+[0m[91mINFO: From Executing genrule //tensorflow/core:version_info_gen [for host]:
+[0m[91mfatal: No names found, cannot describe anything.
+[0m[91mINFO: From Compiling external/snappy/snappy-c.cc [for host]:
+[0m[91mcc1plus: warning: command line option '-Wno-implicit-function-declaration' is valid for C/ObjC but not for C++
+cc1plus: warning: unrecognized command line option '-Wno-shift-negative-value'
+[0m[91mINFO: From Compiling external/snappy/snappy-sinksource.cc [for host]:
+[0m[91mcc1plus: warning: command line option '-Wno-implicit-function-declaration' is valid for C/ObjC but not for C++
+cc1plus: warning: unrecognized command line option '-Wno-shift-negative-value'
+[0m[91mINFO: From Compiling external/snappy/snappy-stubs-internal.cc [for host]:
+[0m[91mcc1plus: warning: command line option '-Wno-implicit-function-declaration' is valid for C/ObjC but not for C++
+cc1plus: warning: unrecognized command line option '-Wno-shift-negative-value'
+[0m[91mINFO: From Compiling external/snappy/snappy.cc [for host]:
+[0m[91mcc1plus: warning: command line option '-Wno-implicit-function-declaration' is valid for C/ObjC but not for C++
+external/snappy/snappy.cc: In member function 'void snappy::SnappySinkAllocator::Flush(size_t)':
+external/snappy/snappy.cc:1403:23: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     for (int i = 0; i < blocks_.size(); ++i) {
+                       ^
+In file included from external/snappy/snappy-internal.h:34:0,
+                 from external/snappy/snappy.cc:30:
+external/snappy/snappy.cc: In instantiation of 'bool snappy::SnappyScatteredWriter<Allocator>::AppendFromSelf(size_t, size_t) [with Allocator = snappy::SnappySinkAllocator; size_t = long unsigned int]':
+external/snappy/snappy.cc:715:13:   required from 'void snappy::SnappyDecompressor::DecompressAllTags(Writer*) [with Writer = snappy::SnappyScatteredWriter<snappy::SnappySinkAllocator>]'
+external/snappy/snappy.cc:799:3:   required from 'bool snappy::InternalUncompressAllTags(snappy::SnappyDecompressor*, Writer*, snappy::uint32) [with Writer = snappy::SnappyScatteredWriter<snappy::SnappySinkAllocator>; snappy::uint32 = unsigned int]'
+external/snappy/snappy.cc:1460:78:   required from here
+external/snappy/snappy.cc:1316:34: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     if (PREDICT_TRUE(offset - 1u < op_ptr_ - op_base_ && op_end <= op_limit_)) {
+                                  ^
+external/snappy/snappy-stubs-internal.h:80:25: note: in definition of macro 'PREDICT_TRUE'
+ #define PREDICT_TRUE(x) x
+                         ^
+At global scope:
+cc1plus: warning: unrecognized command line option '-Wno-shift-negative-value'
+[0m[91m[1,041 / 2,165] Compiling external/jpeg/jchuff.c [for host]; 3s local ... (5 actions running)
+[0m[91mINFO: From ProtoCompile tensorflow/core/grappler/costs/op_performance_data.pb.cc:
+[0m[91mbazel-out/k8-py3-opt/genfiles/external/protobuf_archive/src: warning: directory does not exist.
+bazel-out/k8-py3-opt/genfiles/external/protobuf_archive/src: warning: directory does not exist.
+[0m[91mINFO: From ProtoCompile tensorflow/core/example/example.pb.cc:
+[0m[91mbazel-out/k8-py3-opt/genfiles/external/protobuf_archive/src: warning: directory does not exist.
+[0m[91m[1,125 / 2,165] Compiling tensorflow/core/util/test_log.pb.cc [for host]; 2s local ... (4 actions running)
+[0m[91mINFO: From Compiling tensorflow/stream_executor/stream_executor_pimpl.cc [for host]:
+[0m[91mIn file included from ./tensorflow/core/platform/default/logging.h:24:0,
+                 from ./tensorflow/core/platform/logging.h:25,
+                 from ./tensorflow/core/lib/core/status.h:25,
+                 from ./tensorflow/stream_executor/lib/status.h:21,
+                 from ./tensorflow/stream_executor/stream_executor_pimpl.h:25,
+                 from tensorflow/stream_executor/stream_executor_pimpl.cc:20:
+./tensorflow/core/platform/default/logging.h: In instantiation of 'std::__cxx11::string* tensorflow::internal::Check_EQImpl(const T1&, const T2&, const char*) [with T1 = int; T2 = long long unsigned int; std::__cxx11::string = std::__cxx11::basic_string<char>]':
+tensorflow/stream_executor/stream_executor_pimpl.cc:634:3:   required from here
+./tensorflow/core/platform/default/logging.h:228:25: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+                         == )  // Compilation error with CHECK_EQ(NULL, x)?
+                         ^
+./tensorflow/core/platform/macros.h:79:29: note: in definition of macro 'TF_PREDICT_TRUE'
+ #define TF_PREDICT_TRUE(x) (x)
+                             ^
+./tensorflow/core/platform/default/logging.h:227:1: note: in expansion of macro 'TF_DEFINE_CHECK_OP_IMPL'
+ TF_DEFINE_CHECK_OP_IMPL(Check_EQ,
+ ^
+[0m[91mINFO: From Compiling tensorflow/core/kernels/initializable_lookup_table.cc [for host]:
+In file included from ./tensorflow/core/platform/default/logging.h:24:0,
+                 from ./tensorflow/core/platform/logging.h:25,
+                 from ./tensorflow/core/lib/core/status.h:25,
+                 from ./tensorflow/core/lib/core/errors.h:19,
+                 from ./tensorflow/core/framework/tensor_shape.h:23,
+                 from ./tensorflow/core/framework/partial_tensor_shape.h:20,
+                 from ./tensorflow/core/framework/attr_value_util.h:23,
+                 from ./tensorflow/core/framework/node_def_util.h:23,
+                 from ./tensorflow/core/framework/shape_inference.h:20,
+                 from ./tensorflow/core/framework/common_shape_fns.h:20,
+                 from ./tensorflow/core/framework/resource_mgr.h:24,
+                 from ./tensorflow/core/framework/lookup_interface.h:19,
+                 from ./tensorflow/core/kernels/initializable_lookup_table.h:19,
+                 from tensorflow/core/kernels/initializable_lookup_table.cc:16:
+./tensorflow/core/util/tensor_format.h: In instantiation of 'T tensorflow::GetTensorDim(tensorflow::gtl::ArraySlice<T>, tensorflow::TensorFormat, char) [with T = long long int]':
+./tensorflow/core/util/tensor_format.h:372:47:   required from here
+./tensorflow/core/util/tensor_format.h:340:29: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+   CHECK(index >= 0 && index < dimension_attributes.size())
+                             ^
+./tensorflow/core/platform/macros.h:78:30: note: in definition of macro 'TF_PREDICT_FALSE'
+ #define TF_PREDICT_FALSE(x) (x)
+                              ^
+./tensorflow/core/util/tensor_format.h:340:3: note: in expansion of macro 'CHECK'
+   CHECK(index >= 0 && index < dimension_attributes.size())
+   ^
+./tensorflow/core/util/tensor_format.h: In instantiation of 'T tensorflow::GetFilterDim(tensorflow::gtl::ArraySlice<T>, tensorflow::FilterTensorFormat, char) [with T = long long int]':
+./tensorflow/core/util/tensor_format.h:381:54:   required from here
+./tensorflow/core/util/tensor_format.h:355:29: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+   CHECK(index >= 0 && index < dimension_attribute.size())
+                             ^
+./tensorflow/core/platform/macros.h:78:30: note: in definition of macro 'TF_PREDICT_FALSE'
+ #define TF_PREDICT_FALSE(x) (x)
+                              ^
+./tensorflow/core/util/tensor_format.h:355:3: note: in expansion of macro 'CHECK'
+   CHECK(index >= 0 && index < dimension_attribute.size())
+   ^
+[0m[91mINFO: From Compiling tensorflow/core/kernels/lookup_util.cc [for host]:
+[0m[91mtensorflow/core/kernels/lookup_util.cc: In member function 'virtual void tensorflow::lookup::{anonymous}::TextFileLineIterator::Next()':
+tensorflow/core/kernels/lookup_util.cc:134:46: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+       if (std::max(key_index_, value_index_) >= tokens.size()) {
+                                              ^
+In file included from ./tensorflow/core/platform/default/logging.h:24:0,
+                 from ./tensorflow/core/platform/logging.h:25,
+                 from ./tensorflow/core/lib/core/status.h:25,
+                 from ./tensorflow/core/lib/core/errors.h:19,
+                 from ./tensorflow/core/framework/tensor_shape.h:23,
+                 from ./tensorflow/core/framework/partial_tensor_shape.h:20,
+                 from ./tensorflow/core/framework/attr_value_util.h:23,
+                 from ./tensorflow/core/framework/node_def_util.h:23,
+                 from ./tensorflow/core/framework/shape_inference.h:20,
+                 from ./tensorflow/core/framework/common_shape_fns.h:20,
+                 from ./tensorflow/core/framework/resource_mgr.h:24,
+                 from ./tensorflow/core/framework/lookup_interface.h:19,
+                 from ./tensorflow/core/kernels/lookup_util.h:19,
+                 from tensorflow/core/kernels/lookup_util.cc:16:
+./tensorflow/core/util/tensor_format.h: In instantiation of 'T tensorflow::GetTensorDim(tensorflow::gtl::ArraySlice<T>, tensorflow::TensorFormat, char) [with T = long long int]':
+./tensorflow/core/util/tensor_format.h:372:47:   required from here
+./tensorflow/core/util/tensor_format.h:340:29: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+   CHECK(index >= 0 && index < dimension_attributes.size())
+                             ^
+./tensorflow/core/platform/macros.h:78:30: note: in definition of macro 'TF_PREDICT_FALSE'
+ #define TF_PREDICT_FALSE(x) (x)
+                              ^
+./tensorflow/core/util/tensor_format.h:340:3: note: in expansion of macro 'CHECK'
+   CHECK(index >= 0 && index < dimension_attributes.size())
+   ^
+./tensorflow/core/util/tensor_format.h: In instantiation of 'T tensorflow::GetFilterDim(tensorflow::gtl::ArraySlice<T>, tensorflow::FilterTensorFormat, char) [with T = long long int]':
+./tensorflow/core/util/tensor_format.h:381:54:   required from here
+./tensorflow/core/util/tensor_format.h:355:29: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+   CHECK(index >= 0 && index < dimension_attribute.size())
+                             ^
+./tensorflow/core/platform/macros.h:78:30: note: in definition of macro 'TF_PREDICT_FALSE'
+ #define TF_PREDICT_FALSE(x) (x)
+                              ^
+./tensorflow/core/util/tensor_format.h:355:3: note: in expansion of macro 'CHECK'
+   CHECK(index >= 0 && index < dimension_attribute.size())
+   ^
+[0m[91mINFO: From Compiling tensorflow/stream_executor/cuda/cuda_gpu_executor.cc [for host]:
+[0m[91mtensorflow/stream_executor/cuda/cuda_gpu_executor.cc:181:15: warning: 'std::__cxx11::string perftools::gputools::cuda::GetBinaryDir(bool)' defined but not used [-Wunused-function]
+ static string GetBinaryDir(bool strip_exe) {
+               ^
+[0m[91mINFO: From Compiling tensorflow/stream_executor/stream.cc [for host]:
+[0m[91mtensorflow/stream_executor/stream.cc: In function 'std::__cxx11::string perftools::gputools::{anonymous}::ToVlogString(perftools::gputools::dnn::DataType)':
+tensorflow/stream_executor/stream.cc:184:1: warning: control reaches end of non-void function [-Wreturn-type]
+ }
+ ^
+[0m[91mINFO: From Compiling tensorflow/stream_executor/cuda/cuda_driver.cc [for host]:
+[0m[91mtensorflow/stream_executor/cuda/cuda_driver.cc: In static member function 'static perftools::gputools::port::Status perftools::gputools::cuda::CUDADriver::CreateContext(CUdevice, perftools::gputools::DeviceOptions, perftools::gputools::cuda::CudaContext**)':
+tensorflow/stream_executor/cuda/cuda_driver.cc:504:40: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+       if (former_primary_context_flags != flags) {
+                                        ^
+[0m[91mINFO: From Compiling tensorflow/stream_executor/cuda/cuda_blas.cc [for host]:
+[0m[91mtensorflow/stream_executor/cuda/cuda_blas.cc: In function 'cudaDataType_t perftools::gputools::cuda::{anonymous}::CUDAComputationType(perftools::gputools::blas::ComputationType)':
+tensorflow/stream_executor/cuda/cuda_blas.cc:605:1: warning: control reaches end of non-void function [-Wreturn-type]
+ }
+ ^
+[0m[91mINFO: From Compiling tensorflow/stream_executor/cuda/cuda_dnn.cc [for host]:
+[0m[91mtensorflow/stream_executor/cuda/cuda_dnn.cc:129:26: warning: 'tensorflow::thread::ThreadPool* perftools::gputools::cuda::wrap::GetCudaThreadpool()' defined but not used [-Wunused-function]
+ static port::ThreadPool* GetCudaThreadpool() {
+                          ^
+[0m[91mINFO: From Compiling tensorflow/core/grappler/utils.cc [for host]:
+tensorflow/core/grappler/utils.cc: In function 'void tensorflow::grappler::PermuteNodesInPlace(tensorflow::GraphDef*, std::vector<int>*, bool)':
+tensorflow/core/grappler/utils.cc:335:14: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     while (n != (*permutation)[n]) {
+              ^
+tensorflow/core/grappler/utils.cc: In member function 'std::__cxx11::string tensorflow::grappler::SimpleGraphView::PrintToString() const':
+tensorflow/core/grappler/utils.cc:407:23: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     for (int j = 0; j < outputs(i).size(); ++j) {
+                       ^
+[0m[91m[1,233 / 2,165] Compiling tensorflow/core/lib/io/two_level_iterator.cc [for host]; 1s local ... (4 actions running)
+[0m[91mINFO: From Compiling tensorflow/core/platform/default/tracing.cc [for host]:
+[0m[91mtensorflow/core/platform/default/tracing.cc:32:19: warning: 'tensorflow::port::dummy' defined but not used [-Wunused-variable]
+ static const bool dummy = DoInit();
+                   ^
+[0m[91mINFO: From Compiling tensorflow/python/framework/python_op_gen.cc [for host]:
+[0m[91mtensorflow/python/framework/python_op_gen.cc: In member function 'virtual std::__cxx11::string tensorflow::python_op_gen_internal::GenPythonOp::Code()':
+tensorflow/python/framework/python_op_gen.cc:521:44: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+   for (int i = op_def_.input_arg_size(); i < params_no_default.size(); ++i) {
+                                            ^
+tensorflow/python/framework/python_op_gen.cc:524:21: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+   for (int i = 0; i < params_with_default.size(); ++i) {
+                     ^
+[0m[91mINFO: From Compiling tensorflow/python/eager/python_eager_op_gen.cc [for host]:
+[0m[91mtensorflow/python/eager/python_eager_op_gen.cc: In function 'std::__cxx11::string tensorflow::{anonymous}::VectorToTuple(const std::vector<std::__cxx11::basic_string<char> >&)':
+tensorflow/python/eager/python_eager_op_gen.cc:62:21: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+   for (int i = 0; i < l.size(); ++i) {
+                     ^
+tensorflow/python/eager/python_eager_op_gen.cc: In function 'void tensorflow::{anonymous}::Unflatten(const string&, const std::vector<std::__cxx11::basic_string<char> >&, const string&, std::__cxx11::string*)':
+tensorflow/python/eager/python_eager_op_gen.cc:74:21: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+   for (int i = 0; i < output_sizes.size(); ++i) {
+                     ^
+tensorflow/python/eager/python_eager_op_gen.cc:78:17: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+       if (i + 1 < output_sizes.size()) {
+                 ^
+tensorflow/python/eager/python_eager_op_gen.cc: In member function 'virtual std::__cxx11::string tensorflow::{anonymous}::GenEagerPythonOp::Code()':
+tensorflow/python/eager/python_eager_op_gen.cc:276:44: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+   for (int i = op_def_.input_arg_size(); i < params_no_default.size(); ++i) {
+                                            ^
+tensorflow/python/eager/python_eager_op_gen.cc:353:21: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+   for (int i = 0; i < attrs_.size(); ++i) {
+                     ^
+[0m[91m[1,342 / 2,165] Compiling tensorflow/core/graph/quantize_training.cc [for host]; 4s local ... (4 actions running)
+[0m[91mINFO: From Compiling tensorflow/core/protobuf/config.pb_text.cc [for host]:
+[0m[91mbazel-out/host/genfiles/tensorflow/core/protobuf/config.pb_text.cc: In function 'bool tensorflow::internal::ProtoParseFromScanner(tensorflow::strings::Scanner*, bool, bool, tensorflow::ConfigProto*)':
+bazel-out/host/genfiles/tensorflow/core/protobuf/config.pb_text.cc:636:34: warning: 'map_value' may be used uninitialized in this function [-Wmaybe-uninitialized]
+       (*map)[map_key] = map_value;
+                                  ^
+bazel-out/host/genfiles/tensorflow/core/protobuf/config.pb_text.cc:627:9: note: 'map_value' was declared here
+   int32 map_value;
+         ^
+[0m[91m[1,420 / 2,165] Compiling tensorflow/core/util/example_proto_fast_parsing.cc [for host]; 3s local ... (4 actions running)
+[0mThe command '/bin/sh -c ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1 &&     LD_LIBRARY_PATH=/usr/local/cuda/lib64/stubs:${LD_LIBRARY_PATH}     tensorflow/tools/ci_build/builds/configured GPU     bazel build       --keep_going       --test_summary=detailed       --test_output=errors       -c opt --config=cuda --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx --copt=-mavx2 --copt=-mfma --copt=-O3       --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0"       --       tensorflow/tools/...       tensorflow/compiler/...       tensorflow/contrib/... -tensorflow/contrib/android/... -tensorflow/contrib/lite/...       -tensorflow/examples/...       && rm /usr/local/cuda/lib64/stubs/libcuda.so.1' returned a non-zero code: 137
