@@ -1,4 +1,3 @@
-#FROM nvidia/cuda:9.0-base-ubuntu16.04
 FROM pipelineai/ubuntu-16.04-cpu:1.5.0
 
 RUN \
@@ -143,7 +142,7 @@ RUN \
 #        # --copt=-march="ivybridge" \
 #        # for haswell, broadwell, or skylake
 #        # --copt=-march="haswell" \
-      -c opt --copt=-march="haswell" --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx --copt=-mavx2 --copt=-mfma --copt=-O3 \
+      -c opt --config=mkl --copt=-march="haswell" --copt=-msse4.1 --copt=-msse4.2 --copt=-mavx --copt=-mavx2 --copt=-mfma --copt=-O3 \
       --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
       -- \
       tensorflow/tools/... \
@@ -163,5 +162,11 @@ ENV \
 
 ENV \
   PATH=$TENSORFLOW_HOME/bazel-bin/tensorflow/tools/graph_transforms:$TENSORFLOW_HOME/bazel-bin/tensorflow/python/tools:$TENSORFLOW_HOME/bazel-bin/tensorflow/tools/benchmark/:$TENSORFLOW_HOME/bazel-bin/tensorflow/compiler/aot:$TENSORFLOW_HOME/bazel-bin/tensorflow/compiler/tests:$PATH
+
+# MKL Optimizations:  https://www.tensorflow.org/performance/performance_guide
+ENV \
+  KMP_BLOCKTIME=0 \
+  KMP_AFFINITY=granularity=fine,verbose,compact,1,0 \
+  KMP_SETTINGS=1
 
 WORKDIR /root
